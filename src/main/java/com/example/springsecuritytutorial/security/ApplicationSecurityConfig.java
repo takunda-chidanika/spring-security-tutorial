@@ -1,9 +1,49 @@
 package com.example.springsecuritytutorial.security;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
 /**
- *
  * @author tjchidanika
  * @created 2/8/2023
  */
- 
+
+@EnableWebSecurity
+@RequiredArgsConstructor
+@Configuration
 public class ApplicationSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/","index","/index.html","/css/*","/js/*").permitAll()
+                        .anyRequest()
+                        .authenticated()
+                )
+                .httpBasic(Customizer.withDefaults());
+
+        return http.build();
+    }
+
+    @Bean
+    protected UserDetailsService userDetailsService(){
+        UserDetails takunda = User.builder()
+                .username("takunda")
+                .password("password")
+                .roles("STUDENT")
+                .build();
+
+        return new InMemoryUserDetailsManager(takunda);
+    }
 }
