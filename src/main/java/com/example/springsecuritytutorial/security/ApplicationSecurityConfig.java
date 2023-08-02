@@ -46,6 +46,12 @@ public class ApplicationSecurityConfig {
                 .roles("STUDENT")
                 .build();
 
-        return new InMemoryUserDetailsManager(takunda);
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password(passwordEncoder.encode("password"))
+                .roles("ADMIN")
+                .build();
+
+        return new InMemoryUserDetailsManager(takunda, admin);
     }
 }
