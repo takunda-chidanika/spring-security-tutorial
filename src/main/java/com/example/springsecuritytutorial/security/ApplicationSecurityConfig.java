@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.example.springsecuritytutorial.security.ApplicationUserRole.ADMIN;
+import static com.example.springsecuritytutorial.security.ApplicationUserRole.STUDENT;
+
 /**
  * @author tjchidanika
  * @created 2/8/2023
@@ -43,13 +46,13 @@ public class ApplicationSecurityConfig {
         UserDetails takunda = User.builder()
                 .username("takunda")
                 .password(passwordEncoder.encode("password"))
-                .roles("STUDENT")
+                .roles(STUDENT.name())//ROLE_STUDENT
                 .build();
 
         UserDetails admin = User.builder()
                 .username("admin")
                 .password(passwordEncoder.encode("password"))
-                .roles("ADMIN")
+                .roles(ADMIN.name())//ROLE_ADMIN
                 .build();
 
         return new InMemoryUserDetailsManager(takunda, admin);
