@@ -25,8 +25,8 @@ public class StudentManagementController {
     }
 
     @PostMapping
-    public void registerNewStudent(Student student) {
-        System.out.println(student);
+    public void registerNewStudent(@RequestBody Student student) {
+        System.out.println(student.toString());
     }
 
     @DeleteMapping(path = "{studentId}")
@@ -36,6 +36,6 @@ public class StudentManagementController {
 
     @PutMapping(path = "{studentId}")
     public void updateStudent(@PathVariable("studentId") Integer studentId, Student student) {
-        System.out.printf("%s %s%n", studentId, student);
+        System.out.printf("%s %s%n", studentId, student.toString());
     }
 }

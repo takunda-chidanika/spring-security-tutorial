@@ -1,9 +1,6 @@
 package com.example.springsecuritytutorial.student;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * @author tjchidanika
@@ -14,6 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Student {
     private Integer studentId;
     private String studentName;
