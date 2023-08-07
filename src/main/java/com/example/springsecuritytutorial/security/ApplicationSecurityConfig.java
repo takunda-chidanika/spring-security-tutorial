@@ -1,6 +1,8 @@
 package com.example.springsecuritytutorial.security;
 
 import com.example.springsecuritytutorial.auth.ApplicationUserService;
+import com.example.springsecuritytutorial.jwt.JwtConfig;
+import com.example.springsecuritytutorial.jwt.JwtTokenVerifier;
 import com.example.springsecuritytutorial.jwt.JwtUsernameAndPasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import javax.crypto.SecretKey;
+
 import static com.example.springsecuritytutorial.security.ApplicationUserRole.STUDENT;
 
 /**
@@ -32,6 +36,8 @@ public class ApplicationSecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final ApplicationUserService applicationUserService;
+    private final JwtConfig jwtConfig;
+    private final SecretKey secretKey;
 
     @Bean
     public AuthenticationManager authenticationManager() {
@@ -48,31 +54,14 @@ public class ApplicationSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager()))
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig, secretKey))
+                .addFilterAfter(new JwtTokenVerifier(secretKey, jwtConfig), JwtUsernameAndPasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "index", "/index.html", "/css/*", "/js/*").permitAll()
                         .requestMatchers("/api/**").hasRole(STUDENT.name())
                         .anyRequest()
                         .authenticated()
                 )
-//                .formLogin((formLogin) -> formLogin.
-//                        loginPage("/login")
-//                        .permitAll()
-//                        .defaultSuccessUrl("/courses", true)
-//                )
-//                .rememberMe((rememberMe) -> rememberMe
-//                        .tokenValiditySeconds((int) TimeUnit.MINUTES.toSeconds(1))
-//                        .key("codeXAfrica")
-//                        .rememberMeParameter("remember-me")
-//                )
-//                .logout((logout) -> logout
-//                        .logoutUrl("/logout")
-//                        .deleteCookies("JSESSIONID", "remember-me")
-//                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-//                        .clearAuthentication(true)
-//                        .invalidateHttpSession(true)
-//                        .logoutSuccessUrl("/login")
-//                )
         ;
 
         return http.build();

@@ -8,3 +8,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+application:
+  jwt:
+    secretKey: BTD7LXGaPGYXaCVHO5nFstFJwGQGMi6vzQ81U+Gu0sDNpbWI+RrNYYMAcT6PaBEh
+    tokenPrefix: Bearer
+    tokenExpirationAfterDays: 1
