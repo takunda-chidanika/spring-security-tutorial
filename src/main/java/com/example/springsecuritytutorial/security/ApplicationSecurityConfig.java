@@ -1,21 +1,22 @@
 package com.example.springsecuritytutorial.security;
 
+import com.example.springsecuritytutorial.auth.ApplicationUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import static com.example.springsecuritytutorial.security.ApplicationUserRole.*;
+import java.util.concurrent.TimeUnit;
+
+import static com.example.springsecuritytutorial.security.ApplicationUserRole.STUDENT;
 
 /**
  * @author tjchidanika
@@ -29,50 +30,52 @@ import static com.example.springsecuritytutorial.security.ApplicationUserRole.*;
 public class ApplicationSecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                                .requestMatchers("/", "index", "/index.html", "/css/*", "/js/*").permitAll()
-                                .requestMatchers("/api/**").hasRole(STUDENT.name())
-                                .anyRequest()
-                                .authenticated()
+                        .requestMatchers("/", "index", "/index.html", "/css/*", "/js/*").permitAll()
+                        .requestMatchers("/api/**").hasRole(STUDENT.name())
+                        .anyRequest()
+                        .authenticated()
                 )
-                .formLogin(Customizer.withDefaults());
-//                .formLogin((formLogin)-> formLogin.
-//                        loginPage("/login")
-//                        .permitAll()
-//                );
-//                .rememberMe(Customizer.withDefaults());
+                .formLogin((formLogin) -> formLogin.
+                        loginPage("/login")
+                        .permitAll()
+                        .defaultSuccessUrl("/courses", true)
+                )
+                .rememberMe((rememberMe) -> rememberMe
+                        .tokenValiditySeconds((int) TimeUnit.MINUTES.toSeconds(1))
+                        .key("codeXAfrica")
+                        .rememberMeParameter("remember-me")
+                )
+                .logout((logout) -> logout
+                        .logoutUrl("/logout")
+                        .deleteCookies("JSESSIONID", "remember-me")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                        .clearAuthentication(true)
+                        .invalidateHttpSession(true)
+                        .logoutSuccessUrl("/login")
+                )
+        ;
 
         return http.build();
     }
 
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails takunda = User.builder()
-                .username("takunda")
-                .password(passwordEncoder.encode("password"))
-//                .roles(STUDENT.name())//ROLE_STUDENT
-                .authorities(STUDENT.getAuthorities())
-                .build();
-
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder.encode("password"))
-//                .roles(ADMIN.name())//ROLE_ADMIN
-                .authorities(ADMIN.getAuthorities())
-                .build();
-
-        UserDetails trainee = User.builder()
-                .username("trainee")
-                .password(passwordEncoder.encode("password"))
-//                .roles(ADMINTRAINEE.name())//ROLE_ADMINTRAINEE
-                .authorities(ADMINTRAINEE.getAuthorities())
-                .build();
-
-        return new InMemoryUserDetailsManager(takunda, admin, trainee);
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(applicationUserService);
+
+        return provider;
+    }
+
 }
